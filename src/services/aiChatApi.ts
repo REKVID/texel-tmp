@@ -1,12 +1,13 @@
-// AI Chat API Service
-
-const AI_CHAT_API_URL = import.meta.env.VITE_AI_CHAT_API_URL || 'http://localhost:8001';
+/* src/services/aiChatApi.ts
+ * AI Chat API client with proper error handling and CORS support
+ */
 
 export interface ChatMessage {
   message: string;
   conversation_id: string;
   model?: string;
   temperature?: number;
+  max_tokens?: number;
 }
 
 export interface ChatResponse {
@@ -15,92 +16,100 @@ export interface ChatResponse {
   tokens_used: number;
   conversation_id: string;
   timestamp: string;
+  response_time_ms: number;
 }
 
 export interface ConversationHistory {
   conversation_id: string;
-  messages: Array<{
-    role: 'user' | 'assistant';
-    content: string;
-    timestamp: string;
-  }>;
-  created_at: string;
-  updated_at: string;
+  messages: Array<{ role: "user" | "assistant" | "system"; content: string }>;
+  messages_count: number;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
-class AIChatApiClient {
-  private baseURL: string;
+export interface ServiceStats {
+  total_conversations: number;
+  total_messages: number;
+  active_conversations: number;
+  openrouter_configured: boolean;
+  timestamp: string;
+}
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
-  }
+// Get API URL from environment or use default
+const API_URL = (import.meta.env.VITE_AI_CHAT_API_URL || "http://localhost:8001").replace(/\/+$/, "");
 
-  private async request<T>(
-    endpoint: string, 
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
+console.log("AI Chat API URL:", API_URL);
+
+async function fetchJSON<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const url = `${API_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
+  
+  console.log(`[API] ${options.method || "GET"} ${url}`);
+  
+  const config: RequestInit = {
+    method: options.method ?? "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    ...options,
+  };
+
+  try {
+    const response = await fetch(url, config);
     
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
+    console.log(`[API] Response status: ${response.status}`);
 
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      let errorDetail = `HTTP ${response.status}`;
+      try {
+        const errorData = await response.json() as Record<string, any>;
+        if (errorData?.detail) {
+          errorDetail = String(errorData.detail);
+        }
+      } catch {
+        try {
+          errorDetail = await response.text();
+        } catch {
+          // Use default error message
+        }
       }
-      
-      return await response.json();
-    } catch (error) {
-      console.error(`AI Chat API request failed: ${endpoint}`, error);
-      throw error;
+      throw new Error(errorDetail);
     }
-  }
 
-  // Отправка сообщения в чат
-  async sendMessage(data: ChatMessage): Promise<ChatResponse> {
-    return this.request<ChatResponse>('/chat', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  // Получение истории разговора
-  async getConversationHistory(conversationId: string): Promise<ConversationHistory> {
-    return this.request<ConversationHistory>(`/conversations/${conversationId}`);
-  }
-
-  // Создание новой беседы
-  async createConversation(): Promise<{ conversation_id: string }> {
-    return this.request<{ conversation_id: string }>('/conversations', {
-      method: 'POST',
-    });
-  }
-
-  // Очистка истории разговора
-  async clearConversation(conversationId: string): Promise<{ success: boolean }> {
-    return this.request<{ success: boolean }>(`/conversations/${conversationId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Получение доступных моделей
-  async getAvailableModels(): Promise<Array<{ id: string; name: string; description: string }>> {
-    return this.request<Array<{ id: string; name: string; description: string }>>('/models');
-  }
-
-  // Health check микросервиса
-  async healthCheck(): Promise<{ status: string; version: string }> {
-    return this.request<{ status: string; version: string }>('/health');
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
+    
+    return JSON.parse(text) as T;
+  } catch (error) {
+    console.error(`[API] Error: ${error}`);
+    throw error;
   }
 }
 
-// Export singleton instance
-export const aiChatApi = new AIChatApiClient(AI_CHAT_API_URL);
+export const aiChatApi = {
+  health: () => fetchJSON<{ status: string; version: string }>("/health"),
+  
+  getModels: () => 
+    fetchJSON<Array<{ id: string; name: string; description: string; provider?: string }>>("/models"),
+  
+  getStats: () => fetchJSON<ServiceStats>("/stats"),
+  
+  createConversation: () => 
+    fetchJSON<{ conversation_id: string }>("/conversations", { method: "POST" }),
+  
+  getConversation: (conversationId: string) => 
+    fetchJSON<ConversationHistory>(`/conversations/${conversationId}`),
+  
+  clearConversation: (conversationId: string) => 
+    fetchJSON<{ success: boolean; message: string }>(`/conversations/${conversationId}`, { method: "DELETE" }),
+  
+  sendMessage: (payload: ChatMessage) => {
+    console.log("[API] Sending message:", payload);
+    return fetchJSON<ChatResponse>("/chat", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+};

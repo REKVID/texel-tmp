@@ -1,10 +1,9 @@
-# AI Chat Microservice Docker Compose
-version: '3.8'
+version: "3.9"
 
 services:
   ai-chat:
     build: .
-    container_name: ai-chat-microservice
+    container_name: ai-chat-service
     ports:
       - "8001:8001"
     environment:
@@ -12,45 +11,5 @@ services:
       - AI_CHAT_HOST=0.0.0.0
       - AI_CHAT_PORT=8001
       - DEBUG=false
-    volumes:
-      # Для development - автообновление кода
-      - ./app:/app/app:ro
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
     restart: unless-stopped
-    networks:
-      - ai-chat-network
-    
-  # Опционально: Redis для кэширования разговоров
-  redis:
-    image: redis:7-alpine
-    container_name: ai-chat-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    networks:
-      - ai-chat-network
-    
-  # Опционально: Nginx reverse proxy
-  nginx:
-    image: nginx:alpine
-    container_name: ai-chat-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      # - ./ssl:/etc/nginx/ssl:ro  # SSL сертификаты
-    depends_on:
-      - ai-chat
-    restart: unless-stopped
-    networks:
-      - ai-chat-network
-
-networks:
-  ai-chat-network:
-    driver: bridge
-
-volumes:
-  redis_data:
-    driver: local

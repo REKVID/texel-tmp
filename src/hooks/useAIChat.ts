@@ -1,107 +1,72 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { aiChatApi, ChatMessage, ChatResponse, ConversationHistory } from '@/services/aiChatApi';
-import { toast } from '@/hooks/use-toast';
+/* src/hooks/useAIChat.ts
+ * React Query hooks for AI Chat microservice
+ */
 
-// Query keys для кэширования
-export const aiChatQueryKeys = {
-  conversation: (id: string) => ['ai-chat', 'conversation', id] as const,
-  models: ['ai-chat', 'models'] as const,
-  health: ['ai-chat', 'health'] as const,
-} as const;
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { aiChatApi, ChatMessage, ChatResponse, ConversationHistory, ServiceStats } from '@/services/aiChatApi';
 
-// Hook для отправки сообщения в ИИ чат
-export function useSendMessage() {
-  const queryClient = useQueryClient();
+export type Role = 'user' | 'assistant' | 'system';
 
-  return useMutation({
-    mutationFn: (data: ChatMessage) => aiChatApi.sendMessage(data),
-    onSuccess: (response: ChatResponse, variables) => {
-      // Инвалидируем кэш истории разговора
-      queryClient.invalidateQueries({ 
-        queryKey: aiChatQueryKeys.conversation(variables.conversation_id) 
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Ошибка чата",
-        description: "Не удалось отправить сообщение. Попробуйте еще раз.",
-        variant: "destructive",
-      });
-      console.error('AI chat message failed:', error);
-    },
+// Health check
+export function useHealth() {
+  return useQuery({
+    queryKey: ['health'],
+    queryFn: () => aiChatApi.health(),
+    staleTime: 30 * 1000, // 30 seconds
+    retry: 3,
   });
 }
 
-// Hook для получения истории разговора
-export function useConversationHistory(conversationId: string) {
+// Get available models
+export function useModels() {
   return useQuery({
-    queryKey: aiChatQueryKeys.conversation(conversationId),
-    queryFn: () => aiChatApi.getConversationHistory(conversationId),
-    enabled: !!conversationId,
-    staleTime: 30000, // 30 секунд кэш
+    queryKey: ['models'],
+    queryFn: () => aiChatApi.getModels(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   });
 }
 
-// Hook для создания новой беседы
+// Get service stats
+export function useStats() {
+  return useQuery({
+    queryKey: ['stats'],
+    queryFn: () => aiChatApi.getStats(),
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+// Create conversation
 export function useCreateConversation() {
   return useMutation({
     mutationFn: () => aiChatApi.createConversation(),
-    onError: (error: Error) => {
-      toast({
-        title: "Ошибка создания беседы",
-        description: "Не удалось создать новую беседу.",
-        variant: "destructive",
-      });
-      console.error('Failed to create conversation:', error);
-    },
   });
 }
 
-// Hook для очистки истории разговора
-export function useClearConversation() {
-  const queryClient = useQueryClient();
+// Get conversation history
+export function useConversationHistory(conversationId?: string) {
+  return useQuery({
+    queryKey: ['conversation', conversationId],
+    queryFn: () => conversationId ? aiChatApi.getConversation(conversationId) : Promise.reject('No conversation ID'),
+    enabled: !!conversationId,
+    staleTime: 10 * 1000, // 10 seconds
+  });
+}
 
+// Clear conversation
+export function useClearConversation() {
   return useMutation({
     mutationFn: (conversationId: string) => aiChatApi.clearConversation(conversationId),
-    onSuccess: (_, conversationId) => {
-      // Удаляем из кэша историю разговора
-      queryClient.removeQueries({ 
-        queryKey: aiChatQueryKeys.conversation(conversationId) 
-      });
-      
-      toast({
-        title: "История очищена",
-        description: "История разговора успешно удалена.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Ошибка очистки",
-        description: "Не удалось очистить историю разговора.",
-        variant: "destructive",
-      });
-      console.error('Failed to clear conversation:', error);
-    },
   });
 }
 
-// Hook для получения доступных моделей
-export function useAvailableModels() {
-  return useQuery({
-    queryKey: aiChatQueryKeys.models,
-    queryFn: () => aiChatApi.getAvailableModels(),
-    staleTime: 10 * 60 * 1000, // 10 минут кэш
-    retry: 2,
-  });
-}
-
-// Hook для проверки состояния ИИ чат сервиса
-export function useAIChatHealth() {
-  return useQuery({
-    queryKey: aiChatQueryKeys.health,
-    queryFn: () => aiChatApi.healthCheck(),
-    refetchInterval: 60000, // Проверка каждую минуту
-    retry: false,
+// Send message to chat
+export function useSendMessage() {
+  return useMutation({
+    mutationFn: (payload: ChatMessage) => {
+      console.log('[Hook] Sending message...');
+      return aiChatApi.sendMessage(payload);
+    },
+    retry: 1,
   });
 }

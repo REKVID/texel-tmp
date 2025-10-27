@@ -84,11 +84,13 @@ export const AIChat = () => {
     setMessages(prev => [...prev, loadingMessage]);
 
     // Отправляем сообщение через API
+    const defaultModel = import.meta.env.VITE_AI_CHAT_DEFAULT_MODEL as string | undefined;
+
     sendMessage.mutate(
       {
         message: messageContent,
         conversation_id: conversationId,
-        model: 'deepseek/deepseek-chat-v3-0324:free', // DeepSeek v3-0324 - стабильная бесплатная модель
+        model: defaultModel || 'meta-llama/llama-3.3-70b-instruct:free', // Llama 3.3 70B - мощная бесплатная модель
         temperature: 0.7,
       },
       {
@@ -105,10 +107,20 @@ export const AIChat = () => {
         },
         onError: (error) => {
           // Убираем индикатор загрузки и показываем ошибку
+          console.error('Chat API Error:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+          let userMessage = 'Извините, произошла ошибка при обращении к ИИ.';
+          
+          if (errorMessage.includes('429') || errorMessage.includes('rate')) {
+            userMessage = 'ИИ-модель временно перегружена. Попробуйте через несколько секунд.';
+          } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+            userMessage = 'Ошибка соединения с сервером. Проверьте, запущен ли микросервис (порт 8001).';
+          }
+          
           setMessages(prev => 
             prev.filter(msg => msg.id !== loadingMessage.id).concat({
               id: Date.now().toString(),
-              content: 'Извините, произошла ошибка при обращении к ИИ. Попробуйте позже или обратитесь к преподавателю.',
+              content: userMessage + '\n\nДетали: ' + errorMessage,
               role: 'assistant',
               timestamp: new Date(),
             })
@@ -279,7 +291,7 @@ export const AIChat = () => {
                   ref={inputRef}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendMessage(); } }}
                   placeholder="Задайте вопрос..."
                   className="glass border-primary/20 flex-1"
                   disabled={sendMessage.isPending}
