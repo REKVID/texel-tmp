@@ -1,4 +1,62 @@
-# Texel AI Forge
+# Texel AI
+
+Платформа для обучения работе с искусственным интеллектом с интегрированными микросервисами.
+
+## 🚀 Быстрый старт
+
+### С Docker (рекомендуется)
+
+```bash
+# Запустить микросервисы
+./docker-start.sh
+
+# Запустить фронтенд
+npm install
+npm run dev
+```
+
+Откройте http://localhost:8080
+
+### Без Docker
+
+```bash
+# Терминал 1 - AI Chat
+cd ai-chat-service && ./run.sh
+
+# Терминал 2 - News
+cd news-service && ./run.sh
+
+# Терминал 3 - Frontend
+npm run dev
+```
+
+## 📦 Структура проекта
+
+```
+texel-tmp/
+├── src/                # React фронтенд
+├── ai-chat-service/    # FastAPI чат с AI моделями (порт 8001)
+├── news-service/       # FastAPI парсер новостей (порт 8002)
+├── docker-compose.yml  # Docker конфигурация
+└── docker-start.sh     # Скрипт запуска
+```
+
+## 🎯 Возможности
+
+- 💬 **AI Chat** - Чат с 6 бесплатными моделями через OpenRouter
+- 📰 **News Feed** - Новости о нейросетях с изображениями
+- 🎨 **Resizable Chat** - Растягиваемый интерфейс чата
+- 🔄 **Microservices** - Независимые Docker-контейнеры
+- ⚡ **Real-time** - Индикаторы статуса сервисов
+
+## 📚 Документация
+
+- [SERVICES_README.md](SERVICES_README.md) - Подробное описание всех сервисов
+- [DOCKER_README.md](DOCKER_README.md) - Docker команды и troubleshooting
+- [ai-chat-service/README.md](ai-chat-service/README.md) - AI Chat API
+- [news-service/README.md](news-service/README.md) - News API
+
+## Texel AI Forge
 
 Веб-сайт центра ИИ-инноваций на базе Texel.
 

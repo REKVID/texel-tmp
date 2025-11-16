@@ -101,7 +101,8 @@ export function useAIChatHealth() {
   return useQuery({
     queryKey: aiChatQueryKeys.health,
     queryFn: () => aiChatApi.healthCheck(),
-    refetchInterval: 60000, // Проверка каждую минуту
-    retry: false,
+    refetchInterval: 30000, // Проверка каждые 30 секунд
+    retry: 1,
+    retryDelay: 2000,
   });
 }

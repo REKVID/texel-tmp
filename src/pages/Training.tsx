@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ParticlesBackground } from "@/components/ParticlesBackground";
@@ -74,11 +75,19 @@ const trainingModules = [
 ];
 
 const Training = () => {
+  const [chatWidth, setChatWidth] = useState(0); // По умолчанию чат закрыт
+  
+  // Вычисляем отступ для контента (chatWidth + 24px для right-6, если чат открыт)
+  const contentMarginRight = chatWidth > 0 ? chatWidth + 24 : 0;
+  
   return (
     <div className="main-container min-h-screen">
       <ParticlesBackground />
       
-      <div className="content-layer">
+      <div 
+        className="content-layer transition-[margin] duration-200"
+        style={{ marginRight: `${contentMarginRight}px` }}
+      >
         <Navigation />
         
         {/* Hero Section */}
@@ -200,8 +209,8 @@ const Training = () => {
         <Footer />
       </div>
       
-      {/* AI Chat Component - Fixed Position */}
-      <AIChat />
+      {/* AI Chat Component - Fixed Position with Resize */}
+      <AIChat onWidthChange={setChatWidth} />
     </div>
   );
 };
