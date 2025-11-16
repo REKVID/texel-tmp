@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, User, Settings, LogOut, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.png";
 import {
   Popover,
   PopoverContent,
@@ -23,8 +24,15 @@ export const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-glow-primary">
-              <span className="text-white font-bold text-lg">T</span>
+            <div className="w-35 h-8 from-primary to-secondary flex items-center justify-center shadow-glow-primary">
+    
+               <div className="w-35 h-8 ">
+              <img
+                src={logo}
+                alt="Texel AI"
+                className="w-35 h-9"
+              />
+            </div>
             </div>
             <span className="text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Texel AI
