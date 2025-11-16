@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  ai-chat-service:
+    build: ./ai-chat-service
+    container_name: texel-ai-chat
+    ports:
+      - "8001:8001"
+    environment:
+      - OPENROUTER_API_KEY=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
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  news-service:
+    build: ./news-service
+    container_name: texel-news
+    ports:
+      - "8002:8002"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: texel-network
+
