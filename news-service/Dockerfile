@@ -1,20 +1,15 @@
-FROM python:3.11-slim
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Копируем зависимости
-COPY requirements.txt .
+COPY package*.json ./
 
-# Устанавливаем зависимости
-RUN pip install --no-cache-dir -r requirements.txt
+RUN npm install
 
-# Копируем код приложения и изображения
-COPY main.py .
-COPY img/ ./img/
+COPY . .
 
-# Открываем порт
 EXPOSE 8002
 
 # Запускаем приложение
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002"]
+CMD ["npm", "start"]
 
