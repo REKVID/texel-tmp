@@ -6,6 +6,7 @@ import { ParticlesBackground } from "@/components/ParticlesBackground";
 import { AIChat } from "@/components/AIChat";
 import { Brain } from "lucide-react";
 import { getTrainingModules } from "@/data/training-data";
+import { Button } from "@/components/ui/button";
 
 const trainingModules = getTrainingModules();
 
@@ -63,39 +64,54 @@ const Training = () => {
             {/* Training Modules */}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {trainingModules.map((module, index) => (
-                <Link
+                <div
                   key={module.id}
-                  to={`/training/${module.id}`}
-                  className="glass p-6 rounded-2xl border border-primary/20 hover-lift hover-glow group animate-fade-in transition-all duration-300"
+                  className="glass p-6 rounded-2xl border border-primary/20 hover-glow group animate-fade-in transition-all duration-300 flex flex-col"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <div className="gradient-primary w-12 h-12 rounded-xl flex items-center justify-center mb-4 glow-primary group-hover:scale-110 transition-transform">
-                    <module.icon className="w-6 h-6 text-primary-foreground" />
-                  </div>
-
-                  <h3 className="text-xl font-bold mb-2 text-foreground">
-                    {module.title}
-                  </h3>
-
-                  <p className="text-muted-foreground text-sm mb-4 leading-relaxed line-clamp-3">
-                    {module.description}
-                  </p>
-
-                  {module.estimatedTime && (
-                    <div className="mb-4">
-                      <span className="text-xs text-primary font-semibold bg-primary/10 px-2 py-1 rounded-full">
-                        {module.estimatedTime}
-                      </span>
+                  <Link
+                    to={`/training/${module.id}`}
+                    className="flex-1 block group-hover:-translate-y-1 transition-transform duration-300"
+                  >
+                    <div className="gradient-primary w-12 h-12 rounded-xl flex items-center justify-center mb-4 glow-primary group-hover:scale-110 transition-transform">
+                      <module.icon className="w-6 h-6 text-primary-foreground" />
                     </div>
-                  )}
 
-                  <div className="text-sm text-primary group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                    Начать изучение
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                    <h3 className="text-xl font-bold mb-2 text-foreground">
+                      {module.title}
+                    </h3>
+
+                    <p className="text-muted-foreground text-sm mb-4 leading-relaxed line-clamp-3">
+                      {module.description}
+                    </p>
+
+                    {module.estimatedTime && (
+                      <div className="mb-4">
+                        <span className="text-xs text-primary font-semibold bg-primary/10 px-2 py-1 rounded-full">
+                          {module.estimatedTime}
+                        </span>
+                      </div>
+                    )}
+                  </Link>
+
+                  <div className="flex items-center justify-between pt-4 mt-auto border-t border-primary/5">
+                    <Link
+                      to={`/training/${module.id}`}
+                      className="text-sm font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1"
+                    >
+                      Изучить
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+
+                    <Link to={`/training/${module.id}/test`}>
+                      <Button variant="outline" size="sm" className="rounded-xl h-8 text-xs hover:bg-primary hover:text-primary-foreground transition-all">
+                        Пройти тест
+                      </Button>
+                    </Link>
                   </div>
-                </Link>
+                </div>
               ))}
             </div>
 
