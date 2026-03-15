@@ -13,7 +13,7 @@ https://github.com/user-attachments/assets/5c29d40a-b663-4b36-bea2-bcae134290c1
 ### С Docker (рекомендуется)
 
 ```bash
-# Запустить микросервисы
+# Запустить все микросервисы (AI Chat, News, Auth)
 ./docker-start.sh
 
 # Запустить фронтенд
@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-Откройте http://localhost:8080
+Откройте http://localhost:8080. Сервисы: 8001 (AI Chat), 8002 (News), 8003 (Auth).
 
 ### Без Docker
 
@@ -43,8 +43,9 @@ texel-tmp/
 ├── src/                # React фронтенд
 ├── ai-chat-service/    # FastAPI чат с AI моделями (порт 8001)
 ├── news-service/       # FastAPI парсер новостей (порт 8002)
+├── auth-service/       # FastAPI авторизация (порт 8003)
 ├── docker-compose.yml  # Docker конфигурация
-└── docker-start.sh     # Скрипт запуска
+└── docker-start.sh     # Скрипт запуска всех микросервисов
 ```
 
 ## 🎯 Возможности
