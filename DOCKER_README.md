@@ -11,6 +11,7 @@ docker-compose up -d
 Это запустит:
 - **AI Chat Service** на порту 8001
 - **News Service** на порту 8002
+- **Auth Service** на порту 8003
 
 ### Проверка статуса
 
@@ -24,6 +25,7 @@ docker-compose logs -f
 # Логи конкретного сервиса
 docker-compose logs -f ai-chat-service
 docker-compose logs -f news-service
+docker-compose logs -f auth-service
 ```
 
 ### Остановка сервисов
@@ -81,6 +83,21 @@ docker stop texel-news
 docker rm texel-news
 ```
 
+### Auth Service
+
+```bash
+# Сборка
+cd auth-service
+docker build -t texel-auth .
+
+# Запуск
+docker run -d -p 8003:8003 --name texel-auth texel-auth
+
+# Остановка
+docker stop texel-auth
+docker rm texel-auth
+```
+
 ## Проверка работы
 
 После запуска проверьте:
@@ -93,11 +110,15 @@ curl http://localhost:8001/models
 # News Service
 curl http://localhost:8002/health
 curl http://localhost:8002/news?limit=3
+
+# Auth Service
+curl http://localhost:8003/health
 ```
 
 Или откройте в браузере:
 - AI Chat API: http://localhost:8001/docs
 - News API: http://localhost:8002/docs
+- Auth API: http://localhost:8003/docs
 
 ## Полный стек (с фронтендом)
 

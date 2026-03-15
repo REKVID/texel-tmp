@@ -29,6 +29,19 @@ services:
       retries: 3
       start_period: 40s
 
+  auth-service:
+    build: ./auth-service
+    container_name: texel-auth
+    ports:
+      - "8003:8003"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 networks:
   default:
     name: texel-network
