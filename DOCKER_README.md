@@ -159,6 +159,7 @@ docker-compose up -d --build
 ```bash
 docker-compose logs ai-chat-service | grep ERROR
 docker-compose logs news-service | grep ERROR
+docker-compose logs auth-service | grep ERROR
 ```
 
 ## Production Deployment
