@@ -15,6 +15,7 @@ export const Navigation = () => {
     { name: "Главная", href: "/" },
     { name: "Новости", href: "#news" },
     { name: "Обучение", href: "/training" },
+    { name: "Vibe Coding", href: "/vibe-coding" },
   ];
 
   return (

@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Training from "./pages/Training";
 import TrainingLesson from "./pages/TrainingLesson";
 import TrainingTest from "./pages/TrainingTest";
+import VibeCoding from "./pages/VibeCoding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/training" element={<Training />} />
           <Route path="/training/:topicId" element={<TrainingLesson />} />
           <Route path="/training/:topicId/test" element={<TrainingTest />} />
+          <Route path="/vibe-coding" element={<VibeCoding />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
