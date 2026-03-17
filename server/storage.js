@@ -19,7 +19,9 @@ export async function openDb() {
     filename: dbPath,
     driver: sqlite3.Database,
   });
-  await _db.exec("PRAGMA journal_mode=WAL;");
+  // WAL can cause "disk I/O error" with Docker bind mounts on Windows.
+  // Use DELETE for maximum compatibility.
+  await _db.exec("PRAGMA journal_mode=DELETE;");
   await _db.exec("PRAGMA foreign_keys=ON;");
   return _db;
 }

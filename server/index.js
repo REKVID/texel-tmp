@@ -75,6 +75,16 @@ async function requireUser(req, res) {
   return { db, user };
 }
 
+async function requireAdmin(req, res) {
+  const ctx = await requireUser(req, res);
+  if (!ctx) return null;
+  if (ctx.user.role !== "admin") {
+    res.status(403).json({ detail: "Доступ только для администраторов" });
+    return null;
+  }
+  return ctx;
+}
+
 async function createSession(db, res, userId) {
   const sessionId = makeSessionId();
   const createdAt = nowSec();
@@ -236,6 +246,70 @@ app.get("/api/training/test-results", async (req, res) => {
   );
 
   return res.json({ results: rows });
+});
+
+app.get("/api/admin/users", async (req, res) => {
+  const auth = await requireAdmin(req, res);
+  if (!auth) return;
+  const { db } = auth;
+  const rows = await db.all(
+    `SELECT id, username, email, name, role, progress, created_at
+     FROM users
+     ORDER BY created_at DESC`
+  );
+  return res.json({ users: rows });
+});
+
+app.patch("/api/admin/users/:id", async (req, res) => {
+  const auth = await requireAdmin(req, res);
+  if (!auth) return;
+  const { db } = auth;
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ detail: "Некорректный id пользователя" });
+  }
+
+  const schema = z
+    .object({
+      role: z.string().min(1).max(50).optional(),
+      progress: z.number().int().min(0).max(100).optional(),
+      name: z.string().min(1).max(200).optional(),
+    })
+    .refine((v) => v.role !== undefined || v.progress !== undefined || v.name !== undefined, {
+      message: "Нечего обновлять",
+    });
+
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ detail: "Неверные данные обновления" });
+  }
+
+  const fields = parsed.data;
+  const sets = [];
+  const values = [];
+  if (fields.role !== undefined) {
+    sets.push("role = ?");
+    values.push(fields.role);
+  }
+  if (fields.progress !== undefined) {
+    sets.push("progress = ?");
+    values.push(fields.progress);
+  }
+  if (fields.name !== undefined) {
+    sets.push("name = ?");
+    values.push(fields.name.trim());
+  }
+  values.push(id);
+
+  const sql = `UPDATE users SET ${sets.join(", ")} WHERE id = ?`;
+  await db.run(sql, values);
+
+  const updated = await db.get(
+    `SELECT id, username, email, name, role, progress, created_at FROM users WHERE id = ?`,
+    [id]
+  );
+  if (!updated) return res.status(404).json({ detail: "Пользователь не найден" });
+  return res.json({ user: updated });
 });
 
 // Start

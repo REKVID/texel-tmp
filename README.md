@@ -7,15 +7,17 @@
 ### С Docker (рекомендуется)
 
 ```bash
-# Запустить микросервисы
-./docker-start.sh
+# Запустить микросервисы linux
+./docker-start.sh 
+# Запустить микросервисы Windows
+./docker compose up -d 
 
 # Запустить фронтенд
 npm install
-npm run dev
+npm run dev:all
 ```
 
-Откройте http://localhost:8080
+Откройте http://localhost:8080 or http://127.0.0.1:8080 если не открывается по первому 
 
 ### Без Docker
 
@@ -27,7 +29,7 @@ cd ai-chat-service && ./run.sh
 cd news-service && ./run.sh
 
 # Терминал 3 - Frontend
-npm run dev
+npm run dev:all
 ```
 
 ## 📦 Структура проекта
