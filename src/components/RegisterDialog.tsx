@@ -50,12 +50,18 @@ export function RegisterDialog() {
           <form
             className="space-y-4"
             onSubmit={form.handleSubmit(async (data) => {
-              await register({
-                username: data.username,
-                email: data.email,
-                name: data.name,
-                password: data.password,
-              });
+              try {
+                await register({
+                  username: data.username,
+                  email: data.email,
+                  name: data.name,
+                  password: data.password,
+                });
+              } catch (e) {
+                const message =
+                  e instanceof Error ? e.message : "Не удалось создать аккаунт. Попробуйте ещё раз.";
+                form.setError("root", { type: "server", message });
+              }
             })}
           >
             <FormField
@@ -128,6 +134,10 @@ export function RegisterDialog() {
                 )}
               />
             </div>
+
+            {form.formState.errors.root?.message ? (
+              <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
+            ) : null}
 
             <div className="flex flex-col gap-2">
               <Button

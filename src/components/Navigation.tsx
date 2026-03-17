@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, User, Settings, LogOut, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,6 @@ export const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, openLogin, openRegister, logout } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const navLinks = [
     { name: "Главная", href: "/" },
@@ -21,17 +20,6 @@ export const Navigation = () => {
     { name: "Обучение", href: "/training" },
     { name: "Vibe Coding", href: "/vibe-coding" },
   ];
-
-  const handleNewsClick = () => {
-    if (location.pathname === "/") {
-      const el = document.getElementById("news");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    } else {
-      navigate("/", { state: { from: "news-link" } });
-    }
-  };
 
   const handleStartLearning = () => {
     if (user) {
@@ -57,21 +45,17 @@ export const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => {
-              if (link.name === "Новости") {
-                return (
-                  <button
-                    key={link.name}
-                    type="button"
-                    onClick={handleNewsClick}
-                    className="text-foreground/80 hover:text-foreground transition-colors relative group"
-                  >
-                    {link.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
-                  </button>
-                );
-              }
-              return (
+            {navLinks.map((link) =>
+              link.name === "Новости" ? (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-foreground/80 hover:text-foreground transition-colors relative group"
+                >
+                  {link.name}
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
+                </a>
+              ) : (
                 <Link
                   key={link.name}
                   to={link.href}
@@ -80,8 +64,8 @@ export const Navigation = () => {
                   {link.name}
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-primary group-hover:w-full transition-all duration-300" />
                 </Link>
-              );
-            })}
+              )
+            )}
           </div>
 
           {/* Right Side - User Menu */}
@@ -119,7 +103,7 @@ export const Navigation = () => {
                     <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
                   <div className="p-2">
-                    {user.role === "admin" && (
+                    {user.role.trim().toLowerCase() === "admin" && (
                       <button
                         onClick={() => navigate("/admin")}
                         className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors text-primary"
@@ -171,23 +155,17 @@ export const Navigation = () => {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border/50 animate-fade-in">
             <div className="flex flex-col space-y-3">
-              {navLinks.map((link) => {
-                if (link.name === "Новости") {
-                  return (
-                    <button
-                      key={link.name}
-                      type="button"
-                      onClick={() => {
-                        handleNewsClick();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors text-left"
-                    >
-                      {link.name}
-                    </button>
-                  );
-                }
-                return (
+              {navLinks.map((link) =>
+                link.name === "Новости" ? (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    className="px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                ) : (
                   <Link
                     key={link.name}
                     to={link.href}
@@ -196,8 +174,8 @@ export const Navigation = () => {
                   >
                     {link.name}
                   </Link>
-                );
-              })}
+                )
+              )}
               <div className="border-t border-border/50 my-2" />
               {!user ? (
                 <div className="flex flex-col gap-2 px-4">
@@ -210,7 +188,7 @@ export const Navigation = () => {
                 </div>
               ) : (
                 <>
-                  {user.role === "admin" && (
+                  {user.role.trim().toLowerCase() === "admin" && (
                     <button
                       onClick={() => {
                         navigate("/admin");

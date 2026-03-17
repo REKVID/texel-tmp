@@ -53,13 +53,18 @@ const loginSchema = z.object({
   password: z.string().min(1).max(200),
 });
 
+function normalizeRole(role) {
+  if (typeof role !== "string") return role;
+  return role.trim();
+}
+
 function userToDto(row) {
   return {
     id: row.id,
     username: row.username,
     email: row.email,
     name: row.name,
-    role: row.role,
+    role: normalizeRole(row.role),
     progress: row.progress,
   };
 }
@@ -78,7 +83,8 @@ async function requireUser(req, res) {
 async function requireAdmin(req, res) {
   const ctx = await requireUser(req, res);
   if (!ctx) return null;
-  if (ctx.user.role !== "admin") {
+  const role = normalizeRole(ctx.user.role);
+  if (!role || role.toLowerCase() !== "admin") {
     res.status(403).json({ detail: "Доступ только для администраторов" });
     return null;
   }
@@ -310,6 +316,24 @@ app.patch("/api/admin/users/:id", async (req, res) => {
   );
   if (!updated) return res.status(404).json({ detail: "Пользователь не найден" });
   return res.json({ user: updated });
+});
+
+app.delete("/api/admin/users/:id", async (req, res) => {
+  const auth = await requireAdmin(req, res);
+  if (!auth) return;
+  const { db, user } = auth;
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ detail: "Некорректный id пользователя" });
+  }
+  if (id === user.id) {
+    return res.status(400).json({ detail: "Нельзя удалить собственную учётную запись" });
+  }
+  const result = await db.run(`DELETE FROM users WHERE id = ?`, [id]);
+  if (result.changes === 0) {
+    return res.status(404).json({ detail: "Пользователь не найден" });
+  }
+  return res.json({ ok: true });
 });
 
 // Start

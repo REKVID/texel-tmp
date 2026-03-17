@@ -36,7 +36,13 @@ export function LoginDialog() {
           <form
             className="space-y-4"
             onSubmit={form.handleSubmit(async (data) => {
-              await login({ login_or_email: data.login_or_email, password: data.password });
+              try {
+                await login({ login_or_email: data.login_or_email, password: data.password });
+              } catch (e) {
+                const message =
+                  e instanceof Error ? e.message : "Не удалось войти. Попробуйте ещё раз.";
+                form.setError("root", { type: "server", message });
+              }
             })}
           >
             <FormField

@@ -22,6 +22,7 @@ const AdminPage = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -30,7 +31,7 @@ const AdminPage = () => {
       navigate("/");
       return;
     }
-    if (user.role !== "admin") {
+    if (user.role.trim().toLowerCase() !== "admin") {
       navigate("/");
       return;
     }
@@ -65,7 +66,21 @@ const AdminPage = () => {
     }
   }
 
-  if (loading || !user || user.role !== "admin") {
+  async function handleDelete(id: number) {
+    if (!window.confirm("Удалить этого пользователя? Действие необратимо.")) return;
+    setDeletingId(id);
+    setError(null);
+    try {
+      await adminApi.deleteUser(id);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Ошибка удаления");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  if (loading || !user || user.role.trim().toLowerCase() !== "admin") {
     return (
       <div className="main-container min-h-screen flex items-center justify-center">
         <ParticlesBackground />
@@ -161,14 +176,22 @@ const AdminPage = () => {
                           className="h-8 text-sm"
                         />
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right space-x-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          disabled={savingId === u.id}
+                          disabled={savingId === u.id || deletingId === u.id}
                           onClick={() => void handleSave(u)}
                         >
                           {savingId === u.id ? "Сохраняю…" : "Сохранить"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={savingId === u.id || deletingId === u.id}
+                          onClick={() => void handleDelete(u.id)}
+                        >
+                          {deletingId === u.id ? "Удаляю…" : "Удалить"}
                         </Button>
                       </TableCell>
                     </TableRow>

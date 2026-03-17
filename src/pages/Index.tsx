@@ -7,22 +7,8 @@ import { Benefits } from "@/components/Benefits";
 import { CTA } from "@/components/CTA";
 import { Footer } from "@/components/Footer";
 import { ParticlesBackground } from "@/components/ParticlesBackground";
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
 
 const Index = () => {
-  const location = useLocation();
-
-  useEffect(() => {
-    const from = (location.state as any)?.from;
-    if (from === "news-link") {
-      const el = document.getElementById("news");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }
-  }, [location.state]);
-
   return (
     <main className="main-container min-h-screen">
       <ParticlesBackground />

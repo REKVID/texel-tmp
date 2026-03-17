@@ -37,5 +37,8 @@ export const adminApi = {
       body: JSON.stringify(payload),
     });
   },
+   deleteUser(id: number) {
+    return request<{ ok: true }>(`/admin/users/${id}`, { method: "DELETE" });
+  },
 };
 
