@@ -10,6 +10,12 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     // Allow any external host (useful for changing ngrok URLs)
     allowedHosts: true,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:3001",
+        changeOrigin: true,
+      },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

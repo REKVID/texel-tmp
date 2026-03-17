@@ -40,3 +40,6 @@ npm-debug.log*
 dist/
 build/
 
+# Local auth DB (project-level server)
+data/
+

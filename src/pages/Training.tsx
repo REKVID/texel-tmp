@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -7,14 +7,50 @@ import { AIChat } from "@/components/AIChat";
 import { Brain } from "lucide-react";
 import { getTrainingModules } from "@/data/training-data";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { trainingApi, type TestResultRow } from "@/services/trainingApi";
 
 const trainingModules = getTrainingModules();
 
 const Training = () => {
   const [chatWidth, setChatWidth] = useState(0); // По умолчанию чат закрыт
+  const { user, loading: authLoading } = useAuth();
+  const [results, setResults] = useState<Record<string, TestResultRow>>({});
 
   // Вычисляем отступ для контента (chatWidth + 24px для right-6, если чат открыт)
   const contentMarginRight = chatWidth > 0 ? chatWidth + 24 : 0;
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setResults({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await trainingApi.getAllTestResults();
+        if (cancelled) return;
+        const map: Record<string, TestResultRow> = {};
+        for (const r of res.results) map[r.topic_id] = r;
+        setResults(map);
+      } catch {
+        if (!cancelled) setResults({});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, authLoading]);
+
+  const scoreTone = useMemo(
+    () => (percentage: number) => {
+      if (percentage >= 80) return { bg: "bg-green-500/10", text: "text-green-500", border: "border-green-500/30" };
+      if (percentage >= 50) return { bg: "bg-yellow-500/10", text: "text-yellow-500", border: "border-yellow-500/30" };
+      return { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/30" };
+    },
+    []
+  );
 
   return (
     <div className="main-container min-h-screen">
@@ -105,9 +141,18 @@ const Training = () => {
                       </svg>
                     </Link>
 
+                    {results[module.id] ? (
+                      <div
+                        className={`hidden sm:flex items-center gap-2 px-2 py-1 rounded-full text-xs font-semibold border ${scoreTone(results[module.id].percentage).bg} ${scoreTone(results[module.id].percentage).text} ${scoreTone(results[module.id].percentage).border}`}
+                        title="Ваш сохранённый результат"
+                      >
+                        {results[module.id].score}/{results[module.id].total}
+                      </div>
+                    ) : null}
+
                     <Link to={`/training/${module.id}/test`}>
                       <Button variant="outline" size="sm" className="rounded-xl h-8 text-xs hover:bg-primary hover:text-primary-foreground transition-all">
-                        Пройти тест
+                        {results[module.id] ? "Пройти заново" : "Пройти тест"}
                       </Button>
                     </Link>
                   </div>

@@ -7,9 +7,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, openLogin, openRegister, logout } = useAuth();
 
   const navLinks = [
     { name: "Главная", href: "/" },
@@ -54,37 +56,53 @@ export const Navigation = () => {
               <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full shadow-glow-primary" />
             </Button>
 
-            {/* User Menu */}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
-                  </div>
+            {!user ? (
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" onClick={openLogin}>
+                  Войти
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-0" align="end">
-                <div className="p-4 border-b border-border">
-                  <p className="text-sm font-medium">Гостевой аккаунт</p>
-                  <p className="text-xs text-muted-foreground">guest@texel.ai</p>
-                </div>
-                <div className="p-2">
-                  <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors">
-                    <User className="h-4 w-4" />
-                    <span>Профиль</span>
-                  </button>
-                  <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors">
-                    <Settings className="h-4 w-4" />
-                    <span>Настройки</span>
-                  </button>
-                  <div className="my-1 border-t border-border" />
-                  <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-destructive/10 text-destructive transition-colors">
-                    <LogOut className="h-4 w-4" />
-                    <span>Выйти</span>
-                  </button>
-                </div>
-              </PopoverContent>
-            </Popover>
+                <Button
+                  className="bg-gradient-primary hover:shadow-glow-primary transition-all"
+                  onClick={openRegister}
+                >
+                  Регистрация
+                </Button>
+              </div>
+            ) : (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-0" align="end">
+                  <div className="p-4 border-b border-border">
+                    <p className="text-sm font-medium">{user.name}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                  <div className="p-2">
+                    <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors">
+                      <User className="h-4 w-4" />
+                      <span>Профиль</span>
+                    </button>
+                    <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors">
+                      <Settings className="h-4 w-4" />
+                      <span>Настройки</span>
+                    </button>
+                    <div className="my-1 border-t border-border" />
+                    <button
+                      onClick={() => void logout()}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-destructive/10 text-destructive transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Выйти</span>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
 
             <Button className="bg-gradient-primary hover:shadow-glow-primary transition-all">
               Начать обучение
@@ -119,14 +137,34 @@ export const Navigation = () => {
                 </a>
               ))}
               <div className="border-t border-border/50 my-2" />
-              <button className="flex items-center space-x-2 px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors">
-                <User className="h-4 w-4" />
-                <span>Профиль</span>
-              </button>
-              <button className="flex items-center space-x-2 px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors">
-                <Settings className="h-4 w-4" />
-                <span>Настройки</span>
-              </button>
+              {!user ? (
+                <div className="flex flex-col gap-2 px-4">
+                  <Button variant="outline" onClick={openLogin}>
+                    Войти
+                  </Button>
+                  <Button className="bg-gradient-primary hover:shadow-glow-primary transition-all" onClick={openRegister}>
+                    Регистрация
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <button className="flex items-center space-x-2 px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors">
+                    <User className="h-4 w-4" />
+                    <span>Профиль</span>
+                  </button>
+                  <button className="flex items-center space-x-2 px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors">
+                    <Settings className="h-4 w-4" />
+                    <span>Настройки</span>
+                  </button>
+                  <button
+                    onClick={() => void logout()}
+                    className="flex items-center space-x-2 px-4 py-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Выйти</span>
+                  </button>
+                </>
+              )}
               <Button className="mx-4 bg-gradient-primary hover:shadow-glow-primary transition-all">
                 Начать обучение
               </Button>
