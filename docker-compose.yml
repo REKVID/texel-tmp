@@ -1,26 +1,57 @@
-version: '3.8'
-
 services:
+
+  # ── Frontend (React, built + served by nginx) ────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: texel-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - ai-chat-service
+      - news-service
+    restart: unless-stopped
+
+  # ── Backend (Node.js + Express + SQLite) ─────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: texel-backend
+    volumes:
+      - texel-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── AI Chat microservice (FastAPI + Python) ───────────────────────────────────
   ai-chat-service:
     build: ./ai-chat-service
     container_name: texel-ai-chat
-    ports:
-      - "8001:8001"
     environment:
-      - OPENROUTER_API_KEY=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
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-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}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
+  # ── News microservice (Node.js + rss-parser) ──────────────────────────────────
   news-service:
     build: ./news-service
     container_name: texel-news
-    ports:
-      - "8002:8002"
+    environment:
+      # Fallback image URLs must be reachable by the browser.
+      # nginx proxies /news-api/* → this service, so images are at /news-api/images/*
+      - HOST_URL=http://localhost/news-api
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
@@ -29,7 +60,10 @@ services:
       retries: 3
       start_period: 40s
 
+volumes:
+  texel-data:
+    name: texel-sqlite-data
+
 networks:
   default:
     name: texel-network
-

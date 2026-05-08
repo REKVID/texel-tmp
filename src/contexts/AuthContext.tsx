@@ -13,6 +13,7 @@ type AuthContextValue = {
   setRegisterOpen: (v: boolean) => void;
   login: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
+  updateUser: (input: { name?: string; email?: string }) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -55,6 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     toast({ title: "Аккаунт создан", description: `Здравствуйте, ${u.name}` });
   }
 
+  async function updateUser(input: { name?: string; email?: string }) {
+    const u = await authApi.updateMe(input);
+    setUser(u);
+    toast({ title: "Профиль обновлён" });
+  }
+
   async function logout() {
     await authApi.logout();
     setUser(null);
@@ -73,6 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRegisterOpen,
       login,
       register,
+      updateUser,
       logout,
     }),
     [user, loading, loginOpen, registerOpen]

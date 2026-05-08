@@ -112,11 +112,17 @@ export const Navigation = () => {
                         <span>Админ-панель</span>
                       </button>
                     )}
-                    <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors">
+                    <button
+                      onClick={() => navigate("/profile")}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                    >
                       <User className="h-4 w-4" />
                       <span>Профиль</span>
                     </button>
-                    <button className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors">
+                    <button
+                      onClick={() => navigate("/settings")}
+                      className="w-full flex items-center space-x-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                    >
                       <Settings className="h-4 w-4" />
                       <span>Настройки</span>
                     </button>
@@ -200,11 +206,17 @@ export const Navigation = () => {
                       <span>Админ-панель</span>
                     </button>
                   )}
-                  <button className="flex items-center space-x-2 px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors">
+                  <button
+                    onClick={() => { navigate("/profile"); setMobileMenuOpen(false); }}
+                    className="flex items-center space-x-2 px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                  >
                     <User className="h-4 w-4" />
                     <span>Профиль</span>
                   </button>
-                  <button className="flex items-center space-x-2 px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors">
+                  <button
+                    onClick={() => { navigate("/settings"); setMobileMenuOpen(false); }}
+                    className="flex items-center space-x-2 px-4 py-2 text-foreground/80 hover:text-foreground hover:bg-accent rounded-lg transition-colors"
+                  >
                     <Settings className="h-4 w-4" />
                     <span>Настройки</span>
                   </button>

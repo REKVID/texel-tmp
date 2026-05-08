@@ -182,6 +182,21 @@ app.get("/api/auth/me", async (req, res) => {
   return res.json(userToDto(row));
 });
 
+app.patch("/api/auth/me", async (req, res) => {
+  const db = await openDb();
+  const sessionId = req.cookies[SESSION_COOKIE];
+  const row = await getUserBySession(db, sessionId);
+  if (!row) return res.status(401).json({ detail: "Не авторизован" });
+  const { name, email } = req.body;
+  if (name !== undefined && typeof name !== "string") return res.status(400).json({ detail: "Некорректное имя" });
+  if (email !== undefined && typeof email !== "string") return res.status(400).json({ detail: "Некорректный email" });
+  const newName = (name ?? row.name).trim();
+  const newEmail = (email ?? row.email).trim();
+  await db.run(`UPDATE users SET name = ?, email = ? WHERE id = ?`, [newName, newEmail, row.id]);
+  const updated = await db.get(`SELECT * FROM users WHERE id = ?`, [row.id]);
+  return res.json(userToDto(updated));
+});
+
 app.post("/api/auth/logout", async (req, res) => {
   const db = await openDb();
   const sessionId = req.cookies[SESSION_COOKIE];

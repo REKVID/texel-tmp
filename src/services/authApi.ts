@@ -54,6 +54,12 @@ export const authApi = {
   me() {
     return request<User>("/auth/me", { method: "GET" });
   },
+  updateMe(input: { name?: string; email?: string }) {
+    return request<User>("/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  },
   logout() {
     return request<{ ok: true }>("/auth/logout", { method: "POST" });
   },

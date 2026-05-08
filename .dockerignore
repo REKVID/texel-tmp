@@ -1,0 +1,32 @@
+# Dependencies (installed inside container)
+node_modules
+*/node_modules
+
+# Python virtualenv
+ai-chat-service/venv
+ai-chat-service/__pycache__
+
+# Build output (rebuilt inside container)
+dist
+
+# Runtime data (mounted as volume)
+data
+*.sqlite3
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment files (use docker-compose env instead)
+.env
+.env.local
+.env.*

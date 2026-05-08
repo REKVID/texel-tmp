@@ -10,6 +10,8 @@ import TrainingTest from "./pages/TrainingTest";
 import VibeCoding from "./pages/VibeCoding";
 import NotFound from "./pages/NotFound";
 import AdminPage from "./pages/Admin";
+import ProfilePage from "./pages/Profile";
+import SettingsPage from "./pages/Settings";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LoginDialog } from "@/components/LoginDialog";
 import { RegisterDialog } from "@/components/RegisterDialog";
@@ -32,6 +34,8 @@ const App = () => (
             <Route path="/training/:topicId/test" element={<TrainingTest />} />
             <Route path="/vibe-coding" element={<VibeCoding />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
