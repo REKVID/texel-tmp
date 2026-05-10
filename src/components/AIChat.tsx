@@ -3,18 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { 
-  MessageCircle, 
-  X, 
-  Send, 
-  Bot, 
-  User, 
+  MessageCircle,
+  X,
+  Send,
+  Bot,
+  User,
   Loader2,
   Minimize2,
   Maximize2,
@@ -23,7 +16,7 @@ import {
   GripVertical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useSendMessage, useCreateConversation, useClearConversation, useAvailableModels, useAIChatHealth } from '@/hooks/useAIChat';
+import { useSendMessage, useClearConversation, useAIChatHealth } from '@/hooks/useAIChat';
 
 interface Message {
   id: string;
@@ -50,7 +43,6 @@ export const AIChat = ({ onWidthChange }: AIChatProps = {}) => {
     }
   ]);
   const [inputValue, setInputValue] = useState('');
-  const [selectedModel, setSelectedModel] = useState<string>('deepseek/deepseek-chat-v3-0324:free');
   const [chatWidth, setChatWidth] = useState(384); // 96 * 4 = 384px (w-96)
   const [isResizing, setIsResizing] = useState(false);
   
@@ -60,9 +52,7 @@ export const AIChat = ({ onWidthChange }: AIChatProps = {}) => {
 
   // API hooks
   const sendMessage = useSendMessage();
-  const createConversation = useCreateConversation();
   const clearConversation = useClearConversation();
-  const { data: models, isLoading: modelsLoading } = useAvailableModels();
   const { data: health, isLoading: healthLoading, isError: healthError } = useAIChatHealth();
   
   const isServiceHealthy = health?.status === 'healthy' && !healthError;
@@ -155,7 +145,6 @@ export const AIChat = ({ onWidthChange }: AIChatProps = {}) => {
       {
         message: messageContent,
         conversation_id: conversationId,
-        model: selectedModel,
         temperature: 0.7,
       },
       {
@@ -390,30 +379,6 @@ export const AIChat = ({ onWidthChange }: AIChatProps = {}) => {
 
             {/* Input */}
             <div className="p-4 border-t border-primary/20 space-y-3">
-              {/* Model Selection */}
-              <Select 
-                value={selectedModel} 
-                onValueChange={setSelectedModel}
-                disabled={sendMessage.isPending || modelsLoading}
-              >
-                <SelectTrigger className="glass border-primary/20 text-xs h-8">
-                  <SelectValue placeholder="Выберите модель" />
-                </SelectTrigger>
-                <SelectContent>
-                  {modelsLoading ? (
-                    <SelectItem value="loading" disabled>Загрузка моделей...</SelectItem>
-                  ) : models && models.length > 0 ? (
-                    models.map((model) => (
-                      <SelectItem key={model.id} value={model.id}>
-                        {model.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="default" disabled>Нет доступных моделей</SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}

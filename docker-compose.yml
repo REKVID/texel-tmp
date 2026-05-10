@@ -35,7 +35,7 @@ services:
     build: ./ai-chat-service
     container_name: texel-ai-chat
     environment:
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-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}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]

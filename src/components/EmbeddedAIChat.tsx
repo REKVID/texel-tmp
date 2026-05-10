@@ -3,13 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import {
     Send,
     Bot,
     User,
@@ -18,7 +11,7 @@ import {
     Circle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useSendMessage, useClearConversation, useAvailableModels, useAIChatHealth } from '@/hooks/useAIChat';
+import { useSendMessage, useClearConversation, useAIChatHealth } from '@/hooks/useAIChat';
 
 interface Message {
     id: string;
@@ -43,15 +36,12 @@ export const EmbeddedAIChat: React.FC<EmbeddedAIChatProps> = ({ topicTitle }) =>
         }
     ]);
     const [inputValue, setInputValue] = useState('');
-    const [selectedModel, setSelectedModel] = useState<string>('deepseek/deepseek-chat-v3-0324:free');
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // API hooks - using same logic as original AIChat
     const sendMessage = useSendMessage();
     const clearConversation = useClearConversation();
-    const { data: models, isLoading: modelsLoading } = useAvailableModels();
     const { data: health, isLoading: healthLoading, isError: healthError } = useAIChatHealth();
 
     const isServiceHealthy = health?.status === 'healthy' && !healthError;
@@ -84,7 +74,6 @@ export const EmbeddedAIChat: React.FC<EmbeddedAIChatProps> = ({ topicTitle }) =>
         setMessages(prev => [...prev, userMessage]);
         setInputValue('');
 
-        // Add loading indicator
         const loadingMessage: Message = {
             id: `loading-${Date.now()}`,
             content: '',
@@ -94,12 +83,10 @@ export const EmbeddedAIChat: React.FC<EmbeddedAIChatProps> = ({ topicTitle }) =>
         };
         setMessages(prev => [...prev, loadingMessage]);
 
-        // Send message through API
         sendMessage.mutate(
             {
                 message: messageContent,
                 conversation_id: conversationId,
-                model: selectedModel,
                 temperature: 0.7,
             },
             {
@@ -256,31 +243,7 @@ export const EmbeddedAIChat: React.FC<EmbeddedAIChatProps> = ({ topicTitle }) =>
             </ScrollArea>
 
             {/* Input */}
-            <div className="p-4 border-t border-primary/20 space-y-3 flex-shrink-0">
-                {/* Model Selection */}
-                <Select
-                    value={selectedModel}
-                    onValueChange={setSelectedModel}
-                    disabled={sendMessage.isPending || modelsLoading}
-                >
-                    <SelectTrigger className="glass border-primary/20 text-xs h-8">
-                        <SelectValue placeholder="Выберите модель" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {modelsLoading ? (
-                            <SelectItem value="loading" disabled>Загрузка моделей...</SelectItem>
-                        ) : models && models.length > 0 ? (
-                            models.map((model) => (
-                                <SelectItem key={model.id} value={model.id}>
-                                    {model.name}
-                                </SelectItem>
-                            ))
-                        ) : (
-                            <SelectItem value="default" disabled>Нет доступных моделей</SelectItem>
-                        )}
-                    </SelectContent>
-                </Select>
-
+            <div className="p-4 border-t border-primary/20 space-y-2 flex-shrink-0">
                 <div className="flex gap-2">
                     <Input
                         ref={inputRef}
