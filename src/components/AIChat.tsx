@@ -1,20 +1,22 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  MessageCircle, 
-  X, 
-  Send, 
-  Bot, 
-  User, 
+import {
+  MessageCircle,
+  X,
+  Send,
+  Bot,
+  User,
   Loader2,
   Minimize2,
   Maximize2,
-  RotateCcw
+  RotateCcw,
+  Circle,
+  GripVertical
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useSendMessage, useCreateConversation, useClearConversation } from '@/hooks/useAIChat';
+import { useSendMessage, useClearConversation, useAIChatHealth } from '@/hooks/useAIChat';
 
 interface Message {
   id: string;
@@ -24,7 +26,11 @@ interface Message {
   isLoading?: boolean;
 }
 
-export const AIChat = () => {
+interface AIChatProps {
+  onWidthChange?: (width: number) => void;
+}
+
+export const AIChat = ({ onWidthChange }: AIChatProps = {}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [conversationId, setConversationId] = useState<string>('training-session-' + Date.now());
@@ -37,13 +43,19 @@ export const AIChat = () => {
     }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [chatWidth, setChatWidth] = useState(384); // 96 * 4 = 384px (w-96)
+  const [isResizing, setIsResizing] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   // API hooks
   const sendMessage = useSendMessage();
-  const createConversation = useCreateConversation();
   const clearConversation = useClearConversation();
+  const { data: health, isLoading: healthLoading, isError: healthError } = useAIChatHealth();
+  
+  const isServiceHealthy = health?.status === 'healthy' && !healthError;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,6 +70,51 @@ export const AIChat = () => {
       inputRef.current.focus();
     }
   }, [isOpen, isMinimized]);
+
+  // Уведомляем родителя о изменении ширины
+  useEffect(() => {
+    if (onWidthChange) {
+      // Если чат открыт и не минимизирован, передаем ширину, иначе 0
+      onWidthChange(isOpen && !isMinimized ? chatWidth : 0);
+    }
+  }, [chatWidth, onWidthChange, isOpen, isMinimized]);
+
+  // Обработка изменения размера чата
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !chatRef.current) return;
+
+      const newWidth = window.innerWidth - e.clientX - 24; // 24px для right-6
+      const minWidth = 384; // минимум w-96
+      const maxWidth = window.innerWidth - 200; // оставляем минимум 200px для контента
+
+      const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+      setChatWidth(clampedWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || sendMessage.isPending) return;
@@ -88,7 +145,6 @@ export const AIChat = () => {
       {
         message: messageContent,
         conversation_id: conversationId,
-        model: 'deepseek/deepseek-chat-v3-0324:free', // DeepSeek v3-0324 - стабильная бесплатная модель
         temperature: 0.7,
       },
       {
@@ -162,10 +218,38 @@ export const AIChat = () => {
   }
 
   return (
-    <div className={cn(
-      "fixed right-6 z-50 transition-all duration-300 ease-in-out",
-      isMinimized ? "bottom-6 w-80 h-16" : "bottom-6 top-20 w-96"
-    )}>
+    <div 
+      ref={chatRef}
+      className={cn(
+        "fixed right-6 z-50 transition-all ease-in-out",
+        isMinimized ? "bottom-6 h-16" : "bottom-6 top-20",
+        isResizing ? "transition-none" : "duration-300"
+      )}
+      style={{ 
+        width: isMinimized ? '320px' : `${chatWidth}px`
+      }}
+    >
+      {/* Resize Handle */}
+      {!isMinimized && (
+        <div
+          onMouseDown={handleMouseDown}
+          className={cn(
+            "absolute -left-1 top-0 bottom-0 w-3 cursor-ew-resize z-10 group flex items-center justify-center transition-colors",
+            isResizing ? "bg-primary/30" : "hover:bg-primary/10"
+          )}
+          title="Перетащите, чтобы изменить размер"
+        >
+          <div className={cn(
+            "w-1 h-16 rounded-full transition-all",
+            isResizing 
+              ? "bg-primary/80 scale-110" 
+              : "bg-primary/30 group-hover:bg-primary/60 group-hover:scale-105"
+          )}>
+            <GripVertical className="w-4 h-4 text-primary/70 -ml-1.5 mt-6" />
+          </div>
+        </div>
+      )}
+      
       <div className="glass rounded-2xl border border-primary/20 shadow-2xl h-full flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-primary/20">
@@ -175,7 +259,28 @@ export const AIChat = () => {
             </div>
             <div>
               <h3 className="font-semibold text-foreground">ИИ Помощник</h3>
-              <p className="text-xs text-muted-foreground">Онлайн</p>
+              <div className="flex items-center gap-1.5">
+                <Circle 
+                  className={cn(
+                    "w-2 h-2",
+                    healthLoading 
+                      ? "text-yellow-500 fill-yellow-500 animate-pulse"
+                      : isServiceHealthy
+                        ? "text-green-500 fill-green-500" 
+                        : "text-red-500 fill-red-500"
+                  )} 
+                />
+                <p className={cn(
+                  "text-xs",
+                  healthLoading
+                    ? "text-yellow-500"
+                    : isServiceHealthy
+                      ? "text-green-500" 
+                      : "text-red-500"
+                )}>
+                  {healthLoading ? 'Проверка...' : isServiceHealthy ? 'Онлайн' : 'Оффлайн'}
+                </p>
+              </div>
             </div>
           </div>
           
@@ -273,7 +378,7 @@ export const AIChat = () => {
             </ScrollArea>
 
             {/* Input */}
-            <div className="p-4 border-t border-primary/20">
+            <div className="p-4 border-t border-primary/20 space-y-3">
               <div className="flex gap-2">
                 <Input
                   ref={inputRef}
@@ -282,11 +387,11 @@ export const AIChat = () => {
                   onKeyPress={handleKeyPress}
                   placeholder="Задайте вопрос..."
                   className="glass border-primary/20 flex-1"
-                  disabled={sendMessage.isPending}
+                  disabled={sendMessage.isPending || !isServiceHealthy}
                 />
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!inputValue.trim() || sendMessage.isPending}
+                  disabled={!inputValue.trim() || sendMessage.isPending || !isServiceHealthy}
                   className="gradient-primary glow-primary px-3"
                 >
                   {sendMessage.isPending ? (
@@ -297,7 +402,7 @@ export const AIChat = () => {
                 </Button>
               </div>
               
-              <p className="text-xs text-muted-foreground mt-2 text-center">
+              <p className="text-xs text-muted-foreground text-center">
                 Powered by OpenRouter API • Texel AI
               </p>
             </div>

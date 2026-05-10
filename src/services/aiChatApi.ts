@@ -5,7 +5,6 @@ const AI_CHAT_API_URL = import.meta.env.VITE_AI_CHAT_API_URL || 'http://localhos
 export interface ChatMessage {
   message: string;
   conversation_id: string;
-  model?: string;
   temperature?: number;
 }
 
